@@ -44,23 +44,55 @@ class Company {
     return company;
   }
 
-  /** Find all companies.
+    /** Find all companies or filter them by given parameters.
+   *
+   * If an empty object is passed in, it returns all companies
+   *
+   * If an object with query parameters is passed in, it filters the companies by those parameters
    *
    * Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
    * */
 
-  static async findAll() {
-    const companiesRes = await db.query(
-          `SELECT handle,
-                  name,
-                  description,
-                  num_employees AS "numEmployees",
-                  logo_url AS "logoUrl"
-           FROM companies
-           ORDER BY name`);
-    return companiesRes.rows;
-  }
-
+    static async filterBy(params = {}) {
+      let query = `SELECT handle,
+                          name,
+                          description,
+                          num_employees AS "numEmployees",
+                          logo_url AS "logoUrl"
+                   FROM companies`;
+  
+      let whereExpressions = [];
+      let queryValues = [];
+  
+      const { name, minEmployees, maxEmployees } = params;
+  
+      // For each possible search term, add to whereExpressions and queryValues so we can generate the right SQL
+  
+      if (name !== undefined) {
+        queryValues.push(`%${name}%`);
+        whereExpressions.push(`name ILIKE $${queryValues.length}`);
+      }
+  
+      if (minEmployees !== undefined) {
+        queryValues.push(+minEmployees);
+        whereExpressions.push(`num_employees >= $${queryValues.length}`);
+      }
+  
+      if (maxEmployees !== undefined) {
+        queryValues.push(+maxEmployees);
+        whereExpressions.push(`num_employees <= $${queryValues.length}`);
+      }
+  
+      if (whereExpressions.length > 0) {
+        query += " WHERE " + whereExpressions.join(" AND ");
+      }
+  
+      // Finalize query and return results
+  
+      query += " ORDER BY name";
+      const companiesRes = await db.query(query, queryValues);
+      return companiesRes.rows;
+    }
   /** Given a company handle, return data about company.
    *
    * Returns { handle, name, description, numEmployees, logoUrl, jobs }
