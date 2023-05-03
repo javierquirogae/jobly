@@ -60,5 +60,20 @@ router.get("/", async function (req, res, next) {
 }
 );
 
+// Show Jobs for a Company
+// Now that the app includes jobs, change the GET /companies/:handle feature 
+// so that it includes all of the information about the jobs associated with that company:
+
+router.get("/:handle", async function (req, res, next) {
+    try {
+        const jobs = await Job.get(req.params.handle);
+        return res.json({ jobs });
+    } catch (err) {
+        return next(err);
+    }
+}
+);
+
+
 
 module.exports = router;
