@@ -19,6 +19,8 @@ beforeEach(commonBeforeEach);
 afterEach(commonAfterEach);
 afterAll(commonAfterAll);
 
+let firstIndex;
+
 /************************************** create */
 
 describe("create", function () {
@@ -60,6 +62,7 @@ describe("create", function () {
 describe("findAll", function () {
     test("works: no filter", async function () {
         let jobs = await Job.findAll();
+        firstIndex = jobs[0].id;
         expect(jobs).toEqual([
         {
             id: expect.any(Number),
@@ -92,9 +95,9 @@ describe("findAll", function () {
 
 describe("get", function () {
     test("works", async function () {
-        let job = await Job.get(1);
+        let job = await Job.get(firstIndex);
         expect(job).toEqual({
-        id: 1,
+        id: expect.any(Number),
         title: "j1",
         salary: 100,
         equity: "0.1",
@@ -119,13 +122,13 @@ describe("update", function () {
     const updateData = {
         title: "New",
         salary: 500,
-        equity: 0.5,
+        equity: '0.5',
     };
     
     test("works", async function () {
-        let job = await Job.update(1, updateData);
+        let job = await Job.update(firstIndex, updateData);
         expect(job).toEqual({
-        id: 1,
+        id: expect.any(Number),
         companyHandle: "c1",
         ...updateData,
         });
@@ -133,9 +136,10 @@ describe("update", function () {
         const result = await db.query(
             `SELECT id, title, salary, equity, company_handle AS "companyHandle"
              FROM jobs
-             WHERE id = 1`);
+             WHERE id = $1`, 
+             [firstIndex]);
         expect(result.rows).toEqual([{
-        id: 1,
+        id: expect.any(Number),
         companyHandle: "c1",
         ...updateData,
         }]);
